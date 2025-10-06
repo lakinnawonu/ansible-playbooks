@@ -1,0 +1,7 @@
+---
+- name: Testing playbook to push to github
+  hosts: localhost
+  tasks:
+    - name: Debugging task
+      ansible.builtin.debug:
+        msg: ansible_facts['os_level']
