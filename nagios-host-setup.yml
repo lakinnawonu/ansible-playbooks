@@ -1,0 +1,159 @@
+---
+- name: Configure nagios on hosts
+  hosts: node1,node2
+  gather_facts: false
+  become_user: root
+  vars:
+    dir1: /home/larry/nagios/
+    dir2: /home/larry/nagios/nrpe-4.1.0
+    dir3: /home/larry/nagios/nagios-plugins-2.4.11
+  tasks:
+    - name: Create the nagios folder in all managed nodes
+      ansible.builtin.file:
+        path: "{{ dir1 }}"
+        state: directory
+        owner: larry
+        group: larry
+
+
+    - name: Unarchive the nrpe and nagios plugin
+      ansible.builtin.unarchive:
+        src: /home/larry/nagios2/{{ item }}
+        dest: "{{ dir1 }}"
+      loop:
+        - nrpe-4.1.0.tar.gz
+        - nagios-plugins-2.4.11.tar.gz
+
+    - name: copy the epel package across
+      ansible.builtin.copy:
+        src: /home/larry/nagios2/epel-release-latest-8.noarch.rpm
+        dest: "{{ dir1 }}"
+
+    - name: install the epel package
+      ansible.builtin.shell: dnf install epel-release-latest-8.noarch.rpm  -y
+      args:
+        chdir: "{{ dir1 }}"
+    
+    - name: Install the following packages
+      ansible.builtin.shell:
+        cmd: yum install -y gcc glibc glibc-common openssl openssl-devel perl wget
+
+    - name: compile the nrpe with arguments enabled
+      ansible.builtin.shell: ./configure --enable-command-args && make all
+      args:
+        chdir: "{{ dir2 }}"
+
+    - name: create the nagios group
+      ansible.builtin.shell: make install-groups-users
+      args:
+        chdir: "{{ dir2 }}"
+    
+    - name: Install the binaries
+      ansible.builtin.shell: make install && make install-config
+      args:
+        chdir: "{{ dir2 }}"
+
+    - name: Update the services file
+      ansible.builtin.shell: echo >> /etc/services; echo '# Nagios services' >> /etc/services; echo 'nrpe    5666/tcp' >> /etc/services
+
+    - name: Install Service Daemon
+      ansible.builtin.shell: make install-init
+      args:
+        chdir: "{{ dir2 }}"
+
+    - name: Enable the nrpe service
+      ansible.builtin.service:
+        name: nrpe
+        enabled: true
+
+    - name: Permit traffic in public zone on port 5666/tcp
+      ansible.posix.firewalld:
+        port: 5666/tcp
+        zone: public
+        permanent: true
+        state: enabled
+        immediate: true
+
+    - name: Add the nagios server IP to the allowed hosts
+      ansible.builtin.replace:
+        path: /usr/local/nagios/etc/nrpe.cfg
+        regexp: ^allowed_hosts=127.0.0.1,::1$
+        replace: allowed_hosts=127.0.0.1,192.168.100.1
+        backup: true
+    
+    - name: Add '1' to the dont blame nrpe
+      ansible.builtin.replace:
+        path: /usr/local/nagios/etc/nrpe.cfg
+        regexp: ^dont_blame_nrpe=0$
+        replace: dont_blame_nrpe=1
+        backup: true
+
+    - name: Start the nrpe service
+      ansible.builtin.service:
+        name: nrpe
+        state: started
+      register: nrpe_state
+
+    - name: State of the nrpe service
+      ansible.builtin.debug:
+        var: nrpe_state.status.ActiveState
+
+    - name: Test nrpe 
+      ansible.builtin.shell: /usr/local/nagios/libexec/check_nrpe -H 127.0.0.1
+      register: nrpe_output
+
+    - name: display the result of the previous command
+      ansible.builtin.debug:
+        var: nrpe_output.stdout
+
+    - name: install the following package ready for the plugin 
+      ansible.builtin.shell: yum install -y gcc glibc glibc-common make gettext automake autoconf wget openssl-devel net-snmp net-snmp-utils
+
+    - name: install the perl-snmp
+      ansible.builtin.shell: dnf install -y perl-Net-SNMP --skip-broken
+
+    - name: compile and install the plugin
+      ansible.builtin.shell: ./configure && make && make install
+      args:
+        chdir: "{{ dir3 }}"
+
+    - name: Test NRPE + PLUGINS
+      ansible.builtin.shell: /usr/local/nagios/libexec/check_load -w 15,10,5 -c 30,25,20
+      register: nrpelugins_output
+
+    - name: output of the nrpe test
+      ansible.builtin.debug:
+        var: nrpelugins_output.stdout
+    
+    - name: add the n option to the file
+      ansible.builtin.replace:
+        path: /usr/lib/systemd/system/nrpe.service
+        regexp: ^ExecStart=/usr/local/nagios/bin/nrpe -c /usr/local/nagios/etc/nrpe.cfg -f$
+        replace: ExecStart=/usr/local/nagios/bin/nrpe -n -c /usr/local/nagios/etc/nrpe.cfg -f
+        backup: true
+      notify:
+        - reload the system daemon
+        - restart nrpe
+        - check the nrpe process
+        - display the nrpe process output
+
+  handlers:
+    - name: reload the system daemon
+      ansible.builtin.systemd:
+        daemon_reload: true
+
+    - name: restart nrpe
+      ansible.builtin.service:
+        name: nrpe
+        state: restarted
+
+    - name: check the nrpe process
+      ansible.builtin.shell: ps -ef | grep nrpe
+      register: nrpe_pid
+
+    - name: display the nrpe process output
+      ansible.builtin.debug:
+        var: nrpe_pid.stdout
+
+      
+
