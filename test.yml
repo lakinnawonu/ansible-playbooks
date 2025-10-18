@@ -4,4 +4,4 @@
   tasks:
     - name: Debugging task
       ansible.builtin.debug:
-        msg: ansible_facts['os_level']
+        var: ansible_facts['os_family']
