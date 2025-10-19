@@ -4,4 +4,4 @@
   tasks:
     - name: Debugging task
       ansible.builtin.debug:
-        var: ansible_facts['os_family']
+        msg: The {{ inventory_hostname }} belongs to {{ ansible_facts['os_family'] }}
