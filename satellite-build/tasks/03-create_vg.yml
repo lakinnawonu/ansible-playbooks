@@ -1,0 +1,34 @@
+---
+- name: Create series of logical volumes for the satellite server on vgsat
+  ansible.builtin.import_role:
+    name: redhat.rhel_system_roles.storage
+  vars:
+    storage_pools:
+      - name: vgsat
+        disks:
+          - "{{ selected_disk }}"
+        type: lvm
+        grow_to_fill: true
+        volumes:
+          - name: pgsql_lv
+            fs_type: xfs
+            size: 20GiB
+            mount_point: "/var/lib/pgsql"
+            state: present
+
+          - name: pulp_lv
+            fs_type: xfs
+            size: 300GiB
+            mount_point: "/var/lib/pulp"
+            state: present
+
+          - name: puppet_lv
+            fs_type: xfs
+            size: 10GiB
+            mount_point: "/opt/puppetlabs"
+            state: present
+              # when: selected_disk is defined
+  tags:
+    - lvm
+
+

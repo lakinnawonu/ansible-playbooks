@@ -1,0 +1,33 @@
+---
+- name: Register system with the Red Hat Content Delivery Network
+  ansible.builtin.include_role:
+    name: redhat.rhel_system_roles.rhc
+  no_log: true
+
+- name: Disable all RHSM repositories
+  community.general.rhsm_repository:
+    name: '*'
+    state: disabled
+
+- name: Enable the following repositories
+  ansible.builtin.include_role:
+    name: redhat.rhel_system_roles.rhc
+  vars:
+    rhc_repositories:
+      - {name: "rhel-9-for-x86_64-baseos-rpms", state: enabled}
+      - {name: "rhel-9-for-x86_64-appstream-rpms", state: enabled}
+      - {name: "satellite-6.18-for-rhel-9-x86_64-rpms", state: enabled}
+      - {name: "satellite-maintenance-6.18-for-rhel-9-x86_64-rpms", state: enabled}
+
+- name: Verify that the required repositories are enabled
+  ansible.builtin.shell: dnf repolist enabled
+  register: repolist
+
+- name: Visually confirm the enabled repos
+  ansible.builtin.debug:
+    var: repolist.stdout_lines
+
+- name: Upgrade all packages
+  ansible.builtin.dnf:
+    name: "*"
+    state: latest

@@ -1,0 +1,44 @@
+---
+
+- name: "Create the directories where the lvm would be mounted:"
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop: "{{  mount_points }}"
+  tags:
+    - checks
+
+- name: Ensure blivet Python library is installed
+  ansible.builtin.dnf:
+    name:
+      - python3-blivet
+      - libblockdev-lvm
+      - lvm2
+    state: present
+  tags:
+    - checks
+
+- name: Check forward DNS
+  ansible.builtin.command: "getent hosts {{ ansible_fqdn }}"
+  register: forward_dns
+  changed_when: false
+  failed_when: forward_dns.rc != 0
+  tags:
+    - checks
+
+- name: Ensure /etc/hosts has IPv4 static entry
+  lineinfile:
+    path: /etc/hosts
+    regexp: ".*{{ ansible_fqdn }}"
+    line: "{{ ansible_default_ipv4.address }}   {{ ansible_fqdn }} {{ ansible_hostname }}"
+    state: present
+  tags:
+    - checks
+
+- name: Check reverse DNS
+  ansible.builtin.command: "getent hosts {{ ansible_default_ipv4.address }}"
+  register: reverse_dns
+  changed_when: false
+  failed_when: reverse_dns.rc != 0
+  tags:
+    - checks

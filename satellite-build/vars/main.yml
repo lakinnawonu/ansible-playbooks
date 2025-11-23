@@ -1,0 +1,65 @@
+---
+# vars file for satellite-build
+
+min_cpu_cores: 4
+min_ram_gb: 30
+min_disk_gb: 400
+
+######----------------------------folders to be created and the mount points for the lvms -------------------------------------
+mount_points:
+  - /var/lib/pulp
+  - /var/lib/pgsql
+  - /opt/puppetlabs
+
+###-------------------------------Hashi vault authentication -------------------------------------------------
+vault_url: "{{ lookup('env', 'VAULT_ADDR') }}"
+vault_role_id: "{{ lookup('env', 'VAULT_ROLE_ID') }}"
+vault_secret_id: "{{ lookup('env', 'VAULT_SECRET_ID') }}"
+
+
+###########-----------------------variables to authenticate to redhat console to register server-----------------------------------------------------
+rhc_auth:
+  login:
+    username: "{{ lookup('community.hashi_vault.hashi_vault', 'secret=secret/data/larry_inc/redhat_cred:rhel_user auth_method=approle role_id={{ vault_role_id }} secret_id={{ vault_secret_id }} url={{ vault_url }} validate_certs=False') }}"
+    password: "{{ lookup('community.hashi_vault.hashi_vault', 'secret=secret/data/larry_inc/redhat_cred:rhel_pass auth_method=approle role_id={{ vault_role_id }} secret_id={{ vault_secret_id }} url={{ vault_url }} validate_certs=False') }}"
+
+
+#######---------------------------ports and services to add to firewalld--------------------------------------------------------
+ports:
+  - 8000/tcp
+  - 9090/tcp
+
+services:
+  - dns
+  - dhcp
+  - tftp
+  - https
+  - http
+  - puppetmaster
+
+#######----------------Satellite variables-----------------------------------------------------------------------------
+satellite_username: "{{ lookup('community.hashi_vault.hashi_vault', 'secret=secret/data/larry_inc/satellite:satellite_username auth_method=approle role_id={{ vault_role_id }} secret_id={{ vault_secret_id }} url={{ vault_url }} validate_certs=False') }}"
+
+satellite_password: "{{ lookup('community.hashi_vault.hashi_vault', 'secret=secret/data/larry_inc/satellite:satellite_password  auth_method=approle role_id={{ vault_role_id }} secret_id={{ vault_secret_id }} url={{ vault_url }} validate_certs=False') }}"
+
+satellite_organization: "Lanre_Inc "
+
+satellite_initial_location: Melbourne
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

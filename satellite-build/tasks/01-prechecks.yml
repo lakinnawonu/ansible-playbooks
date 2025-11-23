@@ -1,0 +1,103 @@
+---
+- name: check CPU cores on the managed nodes
+  ansible.builtin.command: nproc
+  register: cpu
+  check_mode: no
+  tags:
+    - cpu
+
+- name: check CPU value
+  ansible.builtin.debug:
+    msg: "CPU cores = {{ cpu.stdout_lines[0] }}"
+  tags:
+    - cpu
+
+- name: continue only if CPU cores ≥ {{ min_cpu_cores }}
+  ansible.builtin.debug:
+    msg: "✅ CPU requirement met: {{ cpu.stdout_lines[0] }} cores"
+  when: (cpu.stdout_lines[0] | int) >= min_cpu_cores
+  tags:
+    - cpu
+
+- name: skip non-compliant hosts if core < {{ min_cpu_cores }}
+  ansible.builtin.meta: end_host
+  when: (cpu.stdout_lines[0] | int) < min_cpu_cores
+  tags:
+    - cpu
+
+###### ----------------------------------- RAM CHECK ----------------------------------------------------
+- name: check the ram size
+  ansible.builtin.shell: free -m | awk '/Mem:/ {print $2}'
+  register: ram_mb
+  check_mode: no
+  tags:
+    - ram
+
+- name: Show ram size
+  ansible.builtin.debug:
+    msg: "RAM total = {{ ram_mb.stdout | int // 1024 }} GB"
+  tags:
+    - ram
+
+- name: Skip host if RAM < {{ min_ram_gb }} GB
+  ansible.builtin.meta: end_host
+  when: (ram_mb.stdout | int // 1024) < min_ram_gb
+  tags:
+    - ram
+- name: mark compliant host (RAM)
+  ansible.builtin.debug:
+    msg: "✅ RAM check passed: {{ ram_mb.stdout | int // 1024 }} GB"
+  tags:
+    - ram
+
+####### --------------------------------- disk check --------------------------------------------------------- 
+- name: Get disk sizes
+  ansible.builtin.command: lsblk -b -J -o NAME,SIZE,TYPE,FSTYPE,MOUNTPOINT
+  register: disk_size
+  changed_when: false
+  check_mode: no
+  tags:
+    - disk
+
+- name: Initialize candidate_disks
+  ansible.builtin.set_fact:
+    required_disks: []
+  tags:
+    - disk
+
+- name: Filter unused/unpartitioned disks with ≥ {{ min_disk_gb }}GB
+  ansible.builtin.set_fact:
+    required_disks: "{{ required_disks + ['/dev/' + item.name] }}"
+  loop: "{{ (disk_size.stdout | from_json).blockdevices }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when:
+    - item.type == 'disk'
+    - item.size | int >= (min_disk_gb * 1024 * 1024 * 1024)
+    - (item.children is not defined) or (item.children | length == 0)
+  tags:
+    - disk
+
+- name: skip host if no suitable disk found
+  ansible.builtin.meta: end_host
+  when: required_disks | length == 0
+  tags:
+    - disk
+
+- name: Select first suitable disk
+  ansible.builtin.set_fact:
+    selected_disk: "{{ required_disks | sort | first }}"
+  tags:
+    - disk
+
+- name: Show Selected disk
+  ansible.builtin.debug:
+    msg: "The selected disk is {{ selected_disk }}"
+  tags:
+    - disk
+
+- name: mark compliant host
+  ansible.builtin.debug:
+    msg: "✅ Disk check passed: {{ selected_disk }}"
+  tags:
+    - disk

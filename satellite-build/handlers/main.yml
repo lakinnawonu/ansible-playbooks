@@ -1,0 +1,7 @@
+---
+# handlers file for satellite-build
+
+- name: reload the firewalld daemon
+  ansible.builtin.service:
+    name: firewalld
+    state: reloaded

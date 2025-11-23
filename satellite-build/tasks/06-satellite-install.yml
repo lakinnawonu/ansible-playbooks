@@ -1,0 +1,37 @@
+---
+
+- name: Install satellite
+  ansible.builtin.dnf:
+    name: satellite
+    state: present
+
+- name: Install satellite with its local database
+  ansible.builtin.include_role:
+    name: redhat.satellite_operations.installer
+  vars:
+    satellite_installer_scenario: satellite
+    satellite_installer_package: satellite-installer
+    satellite_operations_installer_async_timeout: 7200
+    satellite_operations_installer_async_delay: 10
+    #satellite_operations_installer_async_retries: 1800
+    satellite_installer_options:
+      - '--foreman-initial-organization {{ satellite_organization}}'
+      - '--foreman-initial-admin-password {{ satellite_password }}'
+      - '--foreman-initial-admin-username {{ satellite_username }}'
+      - '--foreman-initial-admin-username {{ satellite_initial_location }}'
+
+- name: Detect if Satellite installer already completed successfully
+  ansible.builtin.stat:
+    path: /var/log/foreman-installer/satellite.log
+  register: satlog
+
+- name: Inspect log for success message
+  ansible.builtin.command: "grep 'System configuration has finished' /var/log/foreman-installer/satellite.log"
+  register: sat_success
+  failed_when: false
+  changed_when: false
+
+- name: Skip failure if installer actually finished successfully
+  ansible.builtin.debug:
+    msg: "Satellite installer already finished successfully. Ignoring async error."
+  when: sat_success.rc == 0
