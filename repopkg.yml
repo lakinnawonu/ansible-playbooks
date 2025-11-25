@@ -1,0 +1,95 @@
+---
+- name: Install repo packages on all nodes
+  hosts: rhel8
+  tasks:
+    - name: install the BaseOS repo for rhel9 
+      ansible.builtin.yum_repository:
+        name: BaseOS
+        file: EX294-repos-new
+        description: "EX294 BaseOS"
+        enabled: yes
+        gpgcheck: yes
+        baseurl: http://192.168.100.60/pkgrepo/BaseOS
+        gpgkey: http://192.168.100.60/pkgrepo/RPM-GPG-KEY-redhat-release
+        state: present
+      when:
+        - ansible_distribution == "RedHat"
+        - ansible_distribution_major_version == "9"
+
+    - name: Install the AppStream repo for rhel9
+      ansible.builtin.yum_repository:
+        name: AppStream
+        file: EX294-repos-new
+        description: "EX294 AppStream"
+        enabled: yes
+        gpgcheck: yes
+        baseurl: http://192.168.100.60/pkgrepo/AppStream
+        gpgkey: http://192.168.100.60/pkgrepo/RPM-GPG-KEY-redhat-release
+        state: present
+      when:
+        - ansible_distribution == "RedHat"
+        - ansible_distribution_major_version == "9"
+
+    - name: install the BaseOS repo for rhel8
+      ansible.builtin.yum_repository:
+        name: BaseOS
+        file: EX294-repos-new
+        description: "EX294 BaseOS"
+        enabled: yes
+        gpgcheck: yes
+        baseurl: http://192.168.1.218/pkgrepo8/BaseOS
+        gpgkey: http://192.168.1.218/pkgrepo8/RPM-GPG-KEY-redhat-release
+        state: present
+      when:
+        - ansible_distribution == "RedHat"
+        - ansible_distribution_major_version == "8"
+
+    - name: Install the AppStream repo for rhel8
+      ansible.builtin.yum_repository:
+        name: AppStream
+        file: EX294-repos-new
+        description: "EX294 AppStream"
+        enabled: yes
+        gpgcheck: yes
+        baseurl: http://192.168.1.218/pkgrepo8/AppStream
+        gpgkey: http://192.168.1.218/pkgrepo8/RPM-GPG-KEY-redhat-release
+        state: present
+      when:
+        - ansible_distribution == "RedHat"
+        - ansible_distribution_major_version == "8"
+
+    - name: Add Epel repository to rhel9 
+      ansible.builtin.yum_repository:
+        name: epel9
+        description: EPEL YUM repo
+        file: EX294-repos-new
+        baseurl: http://192.168.100.60/pkgrepo/epel/epel9/epel
+        gpgcheck: yes
+        gpgkey: http://192.168.100.60/pkgrepo/epel/epel9/epel/RPM-GPG-KEY-EPEL-9
+        enabled: yes
+      notify: rhel9-yum-clean-metadata
+      when:
+        - ansible_distribution == "RedHat"
+        - ansible_distribution_major_version == "9"
+
+    - name: Add Epel repository to rhel8
+      ansible.builtin.yum_repository:
+        name: epel8
+        description: EPEL YUM repo
+        file: EX294-repos-new
+        baseurl: http://192.168.1.218/pkgrepo/epel/epel8/epel8
+        gpgcheck: yes
+        gpgkey: http://192.168.1.218/pkgrepo/epel/epel8/epel8/RPM-GPG-KEY-EPEL-8
+        enabled: yes
+      when:
+        - ansible_distribution == "RedHat"
+        - ansible_distribution_major_version == "8"
+      notify: yum-clean-metadata
+        
+
+  handlers:
+    - name: yum-clean-metadata
+      ansible.builtin.command: yum clean metadata
+
+    - name: rhel9-yum-clean-metadata
+      ansible.builtin.command: yum clean metadata
