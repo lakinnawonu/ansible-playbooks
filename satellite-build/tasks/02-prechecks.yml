@@ -3,7 +3,7 @@
 - name: "Create the directories where the lvm would be mounted:"
   ansible.builtin.file:
     path: "{{ item }}"
-    state: directory
+    state: absent
   loop: "{{  mount_points }}"
   tags:
     - checks

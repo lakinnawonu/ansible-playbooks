@@ -1,8 +1,7 @@
 Role Name
 =========
+This role installs the satellite server on a suitable system that meets the installation requirement. This role expects that the server has a minimum of 30GB of ram, 400GB of unused/unpartitioned disk space and alteast 4CPU cores. The hostname of the server should also be set ( hostnamectl set-hostname ****.com)
 
-A brief description of the role goes here.
-This role installs the satellite server on a suitable system that meets the installation requirement
 Requirements
 ------------
 

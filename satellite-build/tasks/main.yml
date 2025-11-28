@@ -26,3 +26,9 @@
 - name: Set up satellite server
   ansible.builtin.include_tasks:
     file: 06-satellite-install.yml
+
+- name: Upload manifest to satellite
+  ansible.builtin.include_tasks:
+    file: 07-configure-satellite.yml
+  tags:
+    - manifest

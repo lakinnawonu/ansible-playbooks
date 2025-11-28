@@ -38,28 +38,11 @@ services:
   - puppetmaster
 
 #######----------------Satellite variables-----------------------------------------------------------------------------
-satellite_username: "{{ lookup('community.hashi_vault.hashi_vault', 'secret=secret/data/larry_inc/satellite:satellite_username auth_method=approle role_id={{ vault_role_id }} secret_id={{ vault_secret_id }} url={{ vault_url }} validate_certs=False') }}"
+satellite_user: "{{ lookup('community.hashi_vault.hashi_vault', 'secret=secret/data/larry_inc/satellite:satellite_username auth_method=approle role_id={{ vault_role_id }} secret_id={{ vault_secret_id }} url={{ vault_url }} validate_certs=False') }}"
 
-satellite_password: "{{ lookup('community.hashi_vault.hashi_vault', 'secret=secret/data/larry_inc/satellite:satellite_password  auth_method=approle role_id={{ vault_role_id }} secret_id={{ vault_secret_id }} url={{ vault_url }} validate_certs=False') }}"
+satellite_pass: "{{ lookup('community.hashi_vault.hashi_vault', 'secret=secret/data/larry_inc/satellite:satellite_password  auth_method=approle role_id={{ vault_role_id }} secret_id={{ vault_secret_id }} url={{ vault_url }} validate_certs=False') }}"
 
-satellite_organization: "Lanre_Inc "
-
+satellite_org: "Lanre_Inc"
+satellite_url: "https://{{ ansible_fqdn }}"
 satellite_initial_location: Melbourne
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

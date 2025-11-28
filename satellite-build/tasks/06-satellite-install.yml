@@ -15,10 +15,10 @@
     satellite_operations_installer_async_delay: 10
     #satellite_operations_installer_async_retries: 1800
     satellite_installer_options:
-      - '--foreman-initial-organization {{ satellite_organization}}'
-      - '--foreman-initial-admin-password {{ satellite_password }}'
-      - '--foreman-initial-admin-username {{ satellite_username }}'
-      - '--foreman-initial-admin-username {{ satellite_initial_location }}'
+      - '--foreman-initial-organization {{ satellite_org }}'
+      - '--foreman-initial-admin-password {{ satellite_pass }}'
+      - '--foreman-initial-admin-username {{ satellite_user }}'
+      - '--foreman-initial-location {{ satellite_initial_location }}'
 
 - name: Detect if Satellite installer already completed successfully
   ansible.builtin.stat:
