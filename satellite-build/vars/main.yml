@@ -2,8 +2,11 @@
 # vars file for satellite-build
 
 min_cpu_cores: 4
-min_ram_gb: 30
+min_ram_gb: 20
 min_disk_gb: 400
+
+#####------------------------------set the hostname----------------------------------------------
+host_name: sat.lab.example.com
 
 ######----------------------------folders to be created and the mount points for the lvms -------------------------------------
 mount_points:
@@ -45,4 +48,21 @@ satellite_pass: "{{ lookup('community.hashi_vault.hashi_vault', 'secret=secret/d
 satellite_org: "Lanre_Inc"
 satellite_url: "https://{{ ansible_fqdn }}"
 satellite_initial_location: Melbourne
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

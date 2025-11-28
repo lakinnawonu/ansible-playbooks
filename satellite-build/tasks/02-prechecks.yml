@@ -18,6 +18,12 @@
   tags:
     - checks
 
+- name: Set a hostname
+  ansible.builtin.hostname:
+    name: "{{ host_name }}"
+  tags:
+    - checks
+
 - name: Check forward DNS
   ansible.builtin.command: "getent hosts {{ ansible_fqdn }}"
   register: forward_dns
@@ -26,14 +32,25 @@
   tags:
     - checks
 
-- name: Ensure /etc/hosts has IPv4 static entry
-  lineinfile:
+- name: Ensure satellite server  /etc/hosts has IPv4 static entry
+  ansible.builtin.lineinfile:
     path: /etc/hosts
     regexp: ".*{{ ansible_fqdn }}"
     line: "{{ ansible_default_ipv4.address }}   {{ ansible_fqdn }} {{ ansible_hostname }}"
     state: present
   tags:
     - checks
+
+- name: Ensure /etc/hosts has IPv4 static entry of the satellite server  on localhost
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    regexp: ".*{{ hostvars[inventory_hostname].ansible_fqdn }}"
+    line: "{{ hostvars[inventory_hostname]. ansible_default_ipv4.address }} {{ hostvars[inventory_hostname].ansible_hostname }} {{ hostvars[inventory_hostname].ansible_fqdn }}"
+    state: present
+  delegate_to: localhost
+  run_once: true
+  tags:
+    - larry
 
 - name: Check reverse DNS
   ansible.builtin.command: "getent hosts {{ ansible_default_ipv4.address }}"
