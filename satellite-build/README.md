@@ -1,11 +1,16 @@
 Role Name
-=========
-This role installs the satellite server on a suitable system that meets the installation requirement. This role expects that the server has a minimum of 30GB of ram, 400GB of unused/unpartitioned disk space and alteast 4CPU cores. The hostname of the server should also be set ( hostnamectl set-hostname ****.com)
+satellite-build
 
 Requirements
 ------------
+This role installs the satellite server on a suitable system that meets the installation requirement. This role expects that the server has a minimum of 30GB of ram, 400GB of unused/unpartitioned disk space and alteast 4CPU cores. The hostname of the server should also be set ( hostnamectl set-hostname )
 
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+minimum ram: 20GB
+minimum disk size: 400GB
+minimu CPU: 4-core 2.0 GHz
+A unique host name
+
+
 
 Role Variables
 --------------
