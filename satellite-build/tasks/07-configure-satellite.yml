@@ -7,7 +7,7 @@
     satellite_username: "{{ satellite_user }}"
     satellite_password: "{{ satellite_pass }}"
     satellite_organization: "{{ satellite_org }}"
-    satellite_manifest_path: "d30f082d-b8b9-4499-9825-21652384599d.zip"
+    satellite_manifest_path: "manifest.zip"                   #you would need to provide your manifest file here
     satellite_validate_certs: false
   tags:
     - manifest
