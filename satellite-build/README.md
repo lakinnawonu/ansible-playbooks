@@ -10,7 +10,16 @@ minimum disk size: 400GB
 minimu CPU: 4-core 2.0 GHz
 A unique host name
 
+It is also expected that the server you want to install satellite on has a working local repo. The reason is that, the success of the task "03-create_vg.yml" is dependent on the python library task been installed in "02-prechecks.yml"
+ The task is as seen below:
 
+- name: Ensure blivet Python library is installed
+  ansible.builtin.dnf:
+    name:
+      - python3-blivet
+      - libblockdev-lvm
+      - lvm2
+    state: present
 
 Role Variables
 --------------
