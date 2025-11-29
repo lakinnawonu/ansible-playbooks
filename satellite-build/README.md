@@ -21,6 +21,8 @@ It is also expected that the server you want to install satellite on has a worki
       - lvm2
     state: present
 
+For the credentials, I made use of Hashi Vault, that is where I kept my secrets, you can define your own credentials as variables in the vars folder or somewhere on your computer and use ansible vault to encrypt it, then reference the path to the credentials in the vars folder
+
 Role Variables
 --------------
 
