@@ -1,34 +1,37 @@
 ---
-# tasks file for satellite-build
-#
+#tasks file for satellite-build
+
 - name: Pre-checks
   ansible.builtin.import_tasks:
-    file: 01-prechecks.yml
-      #  tags:     i can use include_task and if i have to use tags from this part
-      #  - always
+   file: 01-prechecks.yml
+  tags:     i can use include_task and if i have to use tags from this part
+   - always
 
 - name: Further checks
   ansible.builtin.import_tasks:
-    file: 02-prechecks.yml
+   file: 02-prechecks.yml
 
 - name: Create logical volumes
   ansible.builtin.import_tasks:
-    file: 03-create_vg.yml
+   file: 03-create_vg.yml
 
 - name: Add Services to firewall and ports
   ansible.builtin.import_tasks:
-    file: 04-firewall_hosts_resolve.yml
+   file: 04-firewall_hosts_resolve.yml
 
 - name: Register server to redhat portal
   ansible.builtin.include_tasks:
-    file: 05-redhat_subscription.yml
+   file: 05-redhat_subscription.yml
+  tags:
+   - subscription
 
 - name: Set up satellite server
   ansible.builtin.include_tasks:
-    file: 06-satellite-install.yml
+   file: 06-satellite-install.yml
 
 - name: Upload manifest to satellite
   ansible.builtin.include_tasks:
     file: 07-configure-satellite.yml
   tags:
     - manifest
+    - repo

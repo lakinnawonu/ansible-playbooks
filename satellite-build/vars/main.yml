@@ -2,11 +2,11 @@
 # vars file for satellite-build
 
 min_cpu_cores: 4
-min_ram_gb: 20
+min_ram_gb: 30
 min_disk_gb: 400
 
 #####------------------------------set the hostname----------------------------------------------
-host_name: sat.lab.example.com
+host_name: larrysat.lab.example.com
 
 ######----------------------------folders to be created and the mount points for the lvms -------------------------------------
 mount_points:
@@ -21,6 +21,7 @@ vault_secret_id: "{{ lookup('env', 'VAULT_SECRET_ID') }}"
 
 
 ###########-----------------------variables to authenticate to redhat console to register server-----------------------------------------------------
+######----you have to have an existing redhat account to pass to the variables-----------
 rhc_auth:
   login:
     username: "{{ lookup('community.hashi_vault.hashi_vault', 'secret=secret/data/larry_inc/redhat_cred:rhel_user auth_method=approle role_id={{ vault_role_id }} secret_id={{ vault_secret_id }} url={{ vault_url }} validate_certs=False') }}"
@@ -31,7 +32,6 @@ rhc_auth:
 ports:
   - 8000/tcp
   - 9090/tcp
-
 services:
   - dns
   - dhcp
@@ -41,28 +41,18 @@ services:
   - puppetmaster
 
 #######----------------Satellite variables-----------------------------------------------------------------------------
-satellite_user: "{{ lookup('community.hashi_vault.hashi_vault', 'secret=secret/data/larry_inc/satellite:satellite_username auth_method=approle role_id={{ vault_role_id }} secret_id={{ vault_secret_id }} url={{ vault_url }} validate_certs=False') }}"
+###This is the username and password you want the satellite server to have
+satellite_username: "{{ lookup('community.hashi_vault.hashi_vault', 'secret=secret/data/larry_inc/satellite:satellite_username auth_method=approle role_id={{ vault_role_id }} secret_id={{ vault_secret_id 
+}} url={{ vault_url }} validate_certs=False') }}"
 
-satellite_pass: "{{ lookup('community.hashi_vault.hashi_vault', 'secret=secret/data/larry_inc/satellite:satellite_password  auth_method=approle role_id={{ vault_role_id }} secret_id={{ vault_secret_id }} url={{ vault_url }} validate_certs=False') }}"
+satellite_password: "{{ lookup('community.hashi_vault.hashi_vault', 'secret=secret/data/larry_inc/satellite:satellite_password  auth_method=approle role_id={{ vault_role_id }} secret_id={{ vault_secret_id }} url={{ vault_url }} validate_certs=False') }}"
 
-satellite_org: "Lanre_Inc"
-satellite_url: "https://{{ ansible_fqdn }}"
+  #satellite_org: "Lanre_Inc"
+  #satellite_url: "https://{{ ansible_fqdn }}"
+
 satellite_initial_location: Melbourne
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+satellite_server_url: "https://{{ ansible_fqdn }}"
+satellite_organization: "Larry_Inc"
+satellite_validate_certs: false
+satellite_manifest_path: "~/manifest.zip"         #####specify the full path to the manifest file on your control node

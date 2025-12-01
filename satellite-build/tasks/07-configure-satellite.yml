@@ -1,13 +1,28 @@
 ---
 - name: Import manifest
   ansible.builtin.import_role:
-    name:  redhat.satellite.manifest
-  vars:
-    satellite_server_url: "{{ satellite_url }}"
-    satellite_username: "{{ satellite_user }}"
-    satellite_password: "{{ satellite_pass }}"
-    satellite_organization: "{{ satellite_org }}"
-    satellite_manifest_path: "manifest.zip"                   #you would need to provide your manifest file here
-    satellite_validate_certs: false
+  name:  redhat.satellite.manifest
   tags:
-    - manifest
+  - manifest
+  delegate_to: localhost
+  run_once: true
+
+- name: Add repositories
+  ansible.builtin.import_role:
+    name: redhat.satellite.repositories
+  vars:
+    satellite_products:
+      - name: Red Hat Enterprise Linux for x86_64
+        repository_sets:
+          - name: Red Hat Enterprise Linux 8 for x86_64 - BaseOS (RPMs)
+            releasever: 8
+          - name: Red Hat Enterprise Linux 8 for x86_64 - AppStream (RPMs)
+            releasever: 8
+          - name: Red Hat Enterprise Linux 9 for x86_64 - BaseOS (RPMs)
+            releasever: 9
+          - name: Red Hat Enterprise Linux 9 for x86_64 - AppStream (RPMs)
+            releasever: 9
+          - name: Red Hat Enterprise Linux 10 for x86_64 - AppStream (RPMs)
+            releasever: 10
+          - name: Red Hat Enterprise Linux 10 for x86_64 - BaseOS (RPMs)
+            releasever: 10

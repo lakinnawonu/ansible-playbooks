@@ -6,6 +6,8 @@
     permanent: true
     state: enabled
   loop: "{{ ports }}"
+  tags:
+    - firewalld
 
 - name: Allow access to services on Satellite Server
   ansible.posix.firewalld:
@@ -15,27 +17,41 @@
     state: enabled
   loop: "{{ services }}"
   notify: reload the firewalld daemon
+  tags:
+    - firewalld
 
 - name: View all firewall zones and allowed services
   ansible.builtin.command: firewall-cmd --list-all
   register: firewalld
+  tags:
+    - firewalld
 
 - name: Debug firewall zones and allowed services
   ansible.builtin.debug:
     msg: "{{ firewalld.stdout_lines | select('search', '^\\s*services:') | list }}"
+  tags:
+    - firewalld
 
 - name: Ensure that the host name and local host resolve correctly
   ansible.builtin.ping:
   register: pingout
+  tags:
+    - firewalld
 
 - name: Debug host name and local host resolve correctly
   ansible.builtin.debug:
     var: pingout
+  tags:
+    - firewalld
 
 - name: Ensure host resolves again
   ansible.builtin.shell: ping -c1 `hostname -f`
   register: resolves
+  tags:
+    - firewalld
 
 - name: Debug host resolves
   ansible.builtin.debug:
     var: resolves
+  tags:
+    - firewalld

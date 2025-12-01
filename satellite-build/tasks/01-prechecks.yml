@@ -50,7 +50,7 @@
   tags:
     - ram
 
-####### --------------------------------- disk check --------------------------------------------------------- 
+####### --------------------------------- disk check ---------------------------------------------------------
 - name: Get disk sizes
   ansible.builtin.command: lsblk -b -J -o NAME,SIZE,TYPE,FSTYPE,MOUNTPOINT
   register: disk_size
