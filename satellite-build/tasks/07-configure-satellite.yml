@@ -48,7 +48,7 @@
     satellite_sync_plans:
       - name: Rhel Daily sync
         interval: daily
-        sync_date: "2025-12-02 03:00:00 AEDT"
+        sync_date: "2025-12-02 03:00:00"
         products:
           - Red Hat Enterprise Linux for x86_64
   tags:
