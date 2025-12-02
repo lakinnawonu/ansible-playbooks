@@ -53,3 +53,71 @@
           - Red Hat Enterprise Linux for x86_64
   tags:
     - repos
+
+  name: Create lifecycle Environments
+  ansible.builtin.import_role:
+   name: redhat.satellite.lifecycle_environments
+  vars:
+   satellite_lifecycle_environments:
+     - name: "Dev"
+       prior: "Library"
+     - name: "QA"
+       prior: "Dev"
+     - name: "Prod"
+       prior: "QA"
+
+- name: Create content views and composite content views
+  ansible.builtin.import_role:
+    name: redhat.satellite.content_views
+  vars:
+    satellite_content_views:
+      - name: cv_rhel8
+        repositories:
+          - name: Red Hat Enterprise Linux 8 for x86_64 - BaseOS RPMs 8
+            product: 'Red Hat Enterprise Linux for x86_64'
+          - name: Red Hat Enterprise Linux 8 for x86_64 - AppStream RPMs 8
+            product: 'Red Hat Enterprise Linux for x86_64'
+          - name: Red Hat Satellite Client 6 for RHEL 8 x86_64 RPMs
+            product: 'Red Hat Enterprise Linux for x86_64'
+      - name: cv_rhel9
+        repositories:
+          - name: Red Hat Enterprise Linux 9 for x86_64 - BaseOS RPMs 9
+            product: 'Red Hat Enterprise Linux for x86_64'
+          - name: Red Hat Enterprise Linux 9 for x86_64 - AppStream RPMs 9
+            product: 'Red Hat Enterprise Linux for x86_64'
+          - name: Red Hat Satellite Client 6 for RHEL 9 x86_64 RPMs
+            product: 'Red Hat Enterprise Linux for x86_64'
+      - name: cv_rhel10
+        repositories:
+          - name: Red Hat Enterprise Linux 10 for x86_64 - BaseOS RPMs 10
+            product: 'Red Hat Enterprise Linux for x86_64'
+          - name: Red Hat Enterprise Linux 10 for x86_64 - AppStream RPMs 10
+            product: 'Red Hat Enterprise Linux for x86_64'
+          - name: Red Hat Satellite Client 6 for RHEL 9 x86_64 RPMs
+            product: 'Red Hat Enterprise Linux for x86_64'
+      - name: ccv_rhel8
+        auto_publish: true
+        components:
+          - content_view: cv_rhel8
+            latest: true
+      - name: ccv_rhel9
+        auto_publish: true
+        components:
+          - content_view: cv_rhel9
+            latest: true
+      - name: ccv_rhel10
+        auto_publish: true
+        components:
+          - content_view: cv_rhel10
+            latest: true
+  tags:
+      - content_views
+
+- name: Publish content views
+  ansible.builtin.import_role:
+    name: redhat.satellite.content_view_publish
+  vars:
+    satellite_content_views:
+      - cv_rhel8
+      - cv_rhel9
+      - cv_rhel10
