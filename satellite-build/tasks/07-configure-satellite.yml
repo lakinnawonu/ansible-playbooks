@@ -10,7 +10,6 @@
 - name: Add repositories
   ansible.builtin.import_role:
     name: redhat.satellite.repositories
-  vars:
     satellite_products:
       - name: Red Hat Enterprise Linux for x86_64
         repository_sets:
@@ -26,3 +25,31 @@
             releasever: 10
           - name: Red Hat Enterprise Linux 10 for x86_64 - BaseOS (RPMs)
             releasever: 10
+          - name: Red Hat Satellite Client 6 for RHEL 8 x86_64 (RPMs)
+          - name: Red Hat Satellite Client 6 for RHEL 9 x86_64 (RPMs)
+          - name: Red Hat Satellite Client 6 for RHEL 10 x86_64 (RPMs)
+  tags:
+    - repos
+
+- name: Sync the added repos from the previous task
+  redhat.satellite.repository_sync:
+    username: "{{ satellite_username }}"
+    password: "{{ satellite_password }}"
+    server_url: "{{ satellite_server_url }}"
+    organization: "{{ satellite_organization }}"
+    product: Red Hat Enterprise Linux for x86_64
+  tags:
+    - repos
+
+- name: Create a sync plan for the repos
+  ansible.builtin.import_role:
+    name: redhat.satellite.sync_plans
+  vars:
+    satellite_sync_plans:
+      - name: Rhel Daily sync
+        interval: daily
+        sync_date: "2025-12-02 03:00:00 AEDT"
+        products:
+          - Red Hat Enterprise Linux for x86_64
+  tags:
+    - repos
