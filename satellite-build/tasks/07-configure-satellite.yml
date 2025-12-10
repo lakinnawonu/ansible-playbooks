@@ -121,3 +121,46 @@
       - cv_rhel8
       - cv_rhel9
       - cv_rhel10
+
+- name: "Publish the composite content view and promote that version"
+  redhat.satellite.content_view_version:
+    username: "{{ satellite_username }}"
+    password: "{{ satellite_password }}"
+    server_url: "{{ satellite_server_url }}"
+    content_view: "{{ item }}"
+    lifecycle_environments:
+      - Dev
+      - Prod
+  loop:
+    - ccv_rhel8
+    - ccv_rhel9
+    - ccv_rhel10
+  tags:
+    - promote
+  
+- name: Create activation keys
+  ansible.builtin.import_role:
+    name: redhat.satellite.activation_keys
+  vars:
+    satellite_activation_keys:
+      - name: "ak-rhel8"
+        lifecycle_environment: "Prod"
+        content_view: "ccv_rhel8"
+        content_overrides:
+          - label: satellite-client-6-for-rhel-8-x86_64-rpms
+            override: enabled
+
+      - name: "ak-rhel9"
+        lifecycle_environment: "Prod"
+        content_view: "ccv_rhel9"
+        content_overrides:
+          - label: satellite-client-6-for-rhel-9-x86_64-rpms
+            override: enabled
+      - name: "ak-rhel10"
+        lifecycle_environment: "Prod"
+        content_view: "ccv_rhel10"
+        content_overrides:
+          - label: Red Hat Satellite Client 6 for RHEL 10 x86_64 RPMs
+            override: enable
+  tags:
+    - ak-activation_keys 
