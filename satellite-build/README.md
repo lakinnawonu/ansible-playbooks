@@ -3,12 +3,12 @@ satellite-build
 
 Requirements
 ------------
-This role installs the satellite server on a suitable system that meets the installation requirement. This role expects that the server has a minimum of 30GB of ram, 400GB of unused/unpartitioned disk space and alteast 4CPU cores. The hostname of the server should also be set ( hostnamectl set-hostname )
+This role installs the satellite server on a suitable system that meets the installation requirement, this installs satellite 6.18 on a Rhel9 system. This role expects that the server has a minimum of 20GB of ram, 400GB of unused/unpartitioned disk space and alteast 4CPU cores. The hostname of the server should also be set ( hostnamectl set-hostname )
 
-minimum ram: 20GB
-minimum disk size: 400GB
-minimu CPU: 4-core 2.0 GHz
-A unique host name
+- minimum ram: 20GB
+- minimum disk size: 400GB
+- minimum CPU: 4-core 2.0 GHz
+- A unique host name
 
 It is also expected that the server you want to install satellite on has a working local repo. The reason is that, the success of the task "03-create_vg.yml" is dependent on the python library task been installed in "02-prechecks.yml"
  The task is as seen below:
