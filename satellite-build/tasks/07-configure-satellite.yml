@@ -1,43 +1,30 @@
 ---
 - name: Import manifest
   ansible.builtin.import_role:
-  name:  redhat.satellite.manifest
+    name:  redhat.satellite.manifest
   tags:
-  - manifest
+    - manifest
   delegate_to: localhost
   run_once: true
 
-- name: Add repositories
+- name: Add repositories 
   ansible.builtin.import_role:
     name: redhat.satellite.repositories
-    satellite_products:
-      - name: Red Hat Enterprise Linux for x86_64
-        repository_sets:
-          - name: Red Hat Enterprise Linux 8 for x86_64 - BaseOS (RPMs)
-            releasever: 8
-          - name: Red Hat Enterprise Linux 8 for x86_64 - AppStream (RPMs)
-            releasever: 8
-          - name: Red Hat Enterprise Linux 9 for x86_64 - BaseOS (RPMs)
-            releasever: 9
-          - name: Red Hat Enterprise Linux 9 for x86_64 - AppStream (RPMs)
-            releasever: 9
-          - name: Red Hat Enterprise Linux 10 for x86_64 - AppStream (RPMs)
-            releasever: 10
-          - name: Red Hat Enterprise Linux 10 for x86_64 - BaseOS (RPMs)
-            releasever: 10
-          - name: Red Hat Satellite Client 6 for RHEL 8 x86_64 (RPMs)
-          - name: Red Hat Satellite Client 6 for RHEL 9 x86_64 (RPMs)
-          - name: Red Hat Satellite Client 6 for RHEL 10 x86_64 (RPMs)
   tags:
     - repos
 
-- name: Sync the added repos from the previous task
+- name: Sync the added repos
   redhat.satellite.repository_sync:
     username: "{{ satellite_username }}"
     password: "{{ satellite_password }}"
     server_url: "{{ satellite_server_url }}"
     organization: "{{ satellite_organization }}"
+    validate_certs: "{{ satellite_validate_certs }}"
     product: Red Hat Enterprise Linux for x86_64
+    repository: "{{ item }}"
+  async: 14400
+  poll: 30
+  loop: "{{ satellite_sync_list }}"
   tags:
     - repos
 
@@ -48,37 +35,30 @@
     satellite_sync_plans:
       - name: Rhel Daily sync
         interval: daily
-        sync_date: "2025-12-02 03:00:00"
+        sync_date: "2026-06-21 02:00:00 +1100"
         products:
           - Red Hat Enterprise Linux for x86_64
   tags:
     - repos
 
-  name: Create lifecycle Environments
+- name: Create lifecycle Environments
   ansible.builtin.import_role:
-   name: redhat.satellite.lifecycle_environments
-  vars:
-   satellite_lifecycle_environments:
-     - name: "Dev"
-       prior: "Library"
-     - name: "QA"
-       prior: "Dev"
-     - name: "Prod"
-       prior: "QA"
+    name: redhat.satellite.lifecycle_environments
 
-- name: Create content views and composite content views
+- name: Create content views and composite content views 
   ansible.builtin.import_role:
     name: redhat.satellite.content_views
   vars:
     satellite_content_views:
       - name: cv_rhel8
         repositories:
-          - name: Red Hat Enterprise Linux 8 for x86_64 - BaseOS RPMs 8
+          - name: Red Hat Enterprise Linux 8 for x86_64 - BaseOS RPMs 8 
             product: 'Red Hat Enterprise Linux for x86_64'
-          - name: Red Hat Enterprise Linux 8 for x86_64 - AppStream RPMs 8
-            product: 'Red Hat Enterprise Linux for x86_64'
+          - name: Red Hat Enterprise Linux 8 for x86_64 - AppStream RPMs 8 
+            product: 'Red Hat Enterprise Linux for x86_64' 
           - name: Red Hat Satellite Client 6 for RHEL 8 x86_64 RPMs
             product: 'Red Hat Enterprise Linux for x86_64'
+
       - name: cv_rhel9
         repositories:
           - name: Red Hat Enterprise Linux 9 for x86_64 - BaseOS RPMs 9
@@ -87,14 +67,18 @@
             product: 'Red Hat Enterprise Linux for x86_64'
           - name: Red Hat Satellite Client 6 for RHEL 9 x86_64 RPMs
             product: 'Red Hat Enterprise Linux for x86_64'
+
       - name: cv_rhel10
         repositories:
           - name: Red Hat Enterprise Linux 10 for x86_64 - BaseOS RPMs 10
             product: 'Red Hat Enterprise Linux for x86_64'
           - name: Red Hat Enterprise Linux 10 for x86_64 - AppStream RPMs 10
             product: 'Red Hat Enterprise Linux for x86_64'
-          - name: Red Hat Satellite Client 6 for RHEL 9 x86_64 RPMs
+          - name: Red Hat Satellite Client 6 for RHEL 10 x86_64 RPMs
             product: 'Red Hat Enterprise Linux for x86_64'
+
+###-----composite  views-----------------
+
       - name: ccv_rhel8
         auto_publish: true
         components:
@@ -111,7 +95,9 @@
           - content_view: cv_rhel10
             latest: true
   tags:
-      - content_views
+     - content_views
+
+######------------Publish composite views---------
 
 - name: Publish content views
   ansible.builtin.import_role:
@@ -119,25 +105,33 @@
   vars:
     satellite_content_views:
       - cv_rhel8
-      - cv_rhel9
+      - cv_rhel9 
       - cv_rhel10
 
-- name: "Publish the composite content view and promote that version"
+- name: "Publish the composite content view and promote that version" 
   redhat.satellite.content_view_version:
     username: "{{ satellite_username }}"
     password: "{{ satellite_password }}"
+    organization: "{{ satellite_organization }}"
     server_url: "{{ satellite_server_url }}"
+    validate_certs: "{{ satellite_validate_certs }}"
     content_view: "{{ item }}"
+      #force_promote: true
     lifecycle_environments:
       - Dev
+      - QA
       - Prod
   loop:
     - ccv_rhel8
     - ccv_rhel9
     - ccv_rhel10
+  register: promote_result
+  until: promote_result is success
+  retries: 20
+  delay: 30
   tags:
     - promote
-  
+
 - name: Create activation keys
   ansible.builtin.import_role:
     name: redhat.satellite.activation_keys
@@ -156,11 +150,12 @@
         content_overrides:
           - label: satellite-client-6-for-rhel-9-x86_64-rpms
             override: enabled
+
       - name: "ak-rhel10"
         lifecycle_environment: "Prod"
         content_view: "ccv_rhel10"
         content_overrides:
-          - label: Red Hat Satellite Client 6 for RHEL 10 x86_64 RPMs
-            override: enable
+          - label: satellite-client-6-for-rhel-10-x86_64-rpms
+            override: enabled
   tags:
-    - ak-activation_keys 
+    - ak-keys

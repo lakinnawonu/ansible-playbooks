@@ -10,23 +10,38 @@
         type: lvm
         grow_to_fill: true
         volumes:
+          - name: log_lv
+            fs_type: xfs
+            size: "10g"
+            mount_point: "/var/log"
+            state: present
+
           - name: pgsql_lv
             fs_type: xfs
-            size: "10%"
+            size: "20g"
             mount_point: "/var/lib/pgsql"
             state: present
 
           - name: puppet_lv
             fs_type: xfs
-            size: "5%"
+            size: "1g"
             mount_point: "/opt/puppetlabs"
             state: present
-
+         
           - name: pulp_lv
             fs_type: xfs
-            size: "85%"
+            size: "100%FREE"
             mount_point: "/var/lib/pulp"
             state: present
+
+       ####    The below lvm is only required if you're enabling Red Hat Lightspeed in Satellite
+              #  - name: containers_lv                 
+              #  fs_type: xfs
+              #  size: "***"                                 
+              #  mount_point: "/var/lib/containers"
+              #   state: present
   when: selected_disk is defined
   tags:
     - lvm
+
+

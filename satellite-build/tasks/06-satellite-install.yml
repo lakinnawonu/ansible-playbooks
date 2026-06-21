@@ -1,5 +1,10 @@
 ---
 
+- name: Ensure stale SSL build directory is removed before install
+  ansible.builtin.file:
+    path: /root/ssl-build
+    state: absent
+
 - name: Install satellite
   ansible.builtin.dnf:
     name: satellite
@@ -13,28 +18,59 @@
     satellite_installer_package: satellite-installer
     satellite_operations_installer_async_timeout: 7200
     satellite_operations_installer_async_delay: 10
+    #satellite_operations_installer_async_retries: 1800
     satellite_installer_options:
       - '--foreman-initial-organization {{ satellite_organization }}'
       - '--foreman-initial-admin-password {{ satellite_password }}'
       - '--foreman-initial-admin-username {{ satellite_username }}'
       - '--foreman-initial-location {{ satellite_initial_location }}'
-      - '--foreman-proxy-tftp true'
-      - '--foreman-proxy-tftp-servername {{ ansible_fqdn }}'
-      - '--foreman-proxy-content-enable-file true'
-      - '--foreman-proxy-content-enable-yum true'
+        #  - '--foreman-proxy-tftp true'
+        #   - '--foreman-proxy-tftp-servername {{ ansible_fqdn }}'
+        #   - '--foreman-proxy-content-enable-file true'
+        #  - '--foreman-proxy-content-enable-yum true'
+        #  - '--enable-foreman-compute-vmware'
+        #  - '--foreman-proxy-content-pulpcore-worker-count 2'
+  ignore_errors: true
+  register: install_result
 
-- name: Detect if Satellite installer already completed successfully
+###################------Verification phase-------------------------------###########################################
+
+- name: Detect if Satellite installer log exists
   ansible.builtin.stat:
     path: /var/log/foreman-installer/satellite.log
   register: satlog
+
+- name: Fail if log file is missing entirely
+  ansible.builtin.fail:
+    msg: "Critical Error: The Satellite installer log file was not found. The installer likely crashed immediately."
+  when: not satlog.stat.exists
 
 - name: Inspect log for success message
   ansible.builtin.command: "grep 'System configuration has finished' /var/log/foreman-installer/satellite.log"
   register: sat_success
   failed_when: false
   changed_when: false
+  when: satlog.stat.exists
 
-- name: Skip failure if installer actually finished successfully
+######################-------Reporting Phase-------------------------------########################################
+
+- name: Validate Installation Status
+  ansible.builtin.fail:
+    msg: "Satellite installation failed. Log file does not indicate success."
+  when: 
+    - sat_success.rc != 0
+    - satlog.stat.exists
+
+- name: Report Timeout Recovery
   ansible.builtin.debug:
-    msg: "Satellite installer already finished successfully. Ignoring async error."
+    msg: "NOTE: Ansible task timed out or failed, but Satellite installed successfully! Ignoring the error."
+  when: 
+    - install_result.failed is defined
+    - install_result.failed == true
+    - sat_success.rc == 0
+
+- name: Confirm Success
+  ansible.builtin.debug:
+    msg: "Satellite installer completed successfully (verified via logs)."
   when: sat_success.rc == 0
+    

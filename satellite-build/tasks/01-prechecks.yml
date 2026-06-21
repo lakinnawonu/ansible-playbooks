@@ -44,13 +44,40 @@
   when: (ram_mb.stdout | int // 1024) < min_ram_gb
   tags:
     - ram
+
 - name: mark compliant host (RAM)
   ansible.builtin.debug:
     msg: "✅ RAM check passed: {{ ram_mb.stdout | int // 1024 }} GB"
   tags:
     - ram
 
-####### --------------------------------- disk check ---------------------------------------------------------
+####### --------------------------------- SWAP CHECK ---------------------------------------------------------
+- name: check the swap size
+  ansible.builtin.shell: free -m | awk '/Swap:/ {print $2}'
+  register: swap_mb
+  check_mode: no
+  tags:
+    - swap
+  
+- name: Show swap size
+  ansible.builtin.debug:
+    msg: "Swap total = {{ swap_mb.stdout | int // 1024 }} GB"
+  tags:
+    - swap
+  
+- name: Skip host if swap < {{ min_swap_gb }} GB
+  ansible.builtin.meta: end_host
+  when: (swap_mb.stdout | int // 1024) < min_swap_gb
+  tags:
+    - swap
+
+- name: mark compliant host (swap)
+  ansible.builtin.debug:
+  msg: "✅ Swap check passed: {{ swap_mb.stdout | int // 1024 }} GB"
+  tags:
+    - swap
+
+####### --------------------------------- disk check --------------------------------------------------------- 
 - name: Get disk sizes
   ansible.builtin.command: lsblk -b -J -o NAME,SIZE,TYPE,FSTYPE,MOUNTPOINT
   register: disk_size

@@ -16,8 +16,8 @@
     rhc_repositories:
       - {name: "rhel-9-for-x86_64-baseos-rpms", state: enabled}
       - {name: "rhel-9-for-x86_64-appstream-rpms", state: enabled}
-      - {name: "satellite-6.18-for-rhel-9-x86_64-rpms", state: enabled}
-      - {name: "satellite-maintenance-6.18-for-rhel-9-x86_64-rpms", state: enabled}
+      - {name: "satellite-6.19-for-rhel-9-x86_64-rpms", state: enabled}
+      - {name: "satellite-maintenance-6.19-for-rhel-9-x86_64-rpms", state: enabled}
 
 - name: Verify that the required repositories are enabled
   ansible.builtin.shell: dnf repolist enabled

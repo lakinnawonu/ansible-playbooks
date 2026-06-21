@@ -1,158 +1,36 @@
 ---
-- name: Import manifest
-  ansible.builtin.import_role:
-    name:  redhat.satellite.manifest
+# tasks file for satellite-build
+
+
+- name: Pre-checks
+  ansible.builtin.import_tasks:
+    file: 01-prechecks.yml
+
+- name: Further checks
+  ansible.builtin.import_tasks:
+    file: 02-prechecks.yml
+
+- name: Create logical volumes
+  ansible.builtin.import_tasks:
+    file: 03-create_vg.yml
+
+- name: Add Services to firewall and ports
+  ansible.builtin.import_tasks:
+    file: 04-firewall_hosts_resolve.yml
+
+- name: Register server to redhat portal
+  ansible.builtin.include_tasks:
+    file: 05-redhat_subscription.yml
+  tags:
+    - subscription
+
+- name: Set up satellite server
+  ansible.builtin.include_tasks:
+    file: 06-satellite-install.yml
+
+- name: configure the satellite server
+  ansible.builtin.include_tasks:
+    file: 07-configure-satellite.yml
   tags:
     - manifest
-  delegate_to: localhost
-  run_once: true
-
-- name: Add repositories
-  ansible.builtin.import_role:
-    name: redhat.satellite.repositories
-  tags:
-    - repos
-
-- name: Sync the added repos
-  redhat.satellite.repository_sync:
-    username: "{{ satellite_username }}"
-    password: "{{ satellite_password }}"
-    server_url: "{{ satellite_server_url }}"
-    organization: "{{ satellite_organization }}"
-    product: Red Hat Enterprise Linux for x86_64
-    repository: "{{ item.name }}"
-  async: 7200
-  poll: 60
-  loop: "{{ satellite_products[0].repository_sets }}"
-  tags:
-    - repos
-
-- name: Create a sync plan for the repos
-  ansible.builtin.import_role:
-    name: redhat.satellite.sync_plans
-  vars:
-    satellite_sync_plans:
-      - name: Rhel Daily sync
-        interval: daily
-        sync_date: "2025-12-14 02:00:00 +1100"
-        products:
-          - Red Hat Enterprise Linux for x86_64
-  tags:
-    - repos
-
-- name: Create lifecycle Environments
-  ansible.builtin.import_role:
-    name: redhat.satellite.lifecycle_environments
-
-- name: Create content views and composite content views
-  ansible.builtin.import_role:
-    name: redhat.satellite.content_views
-  vars:
-    satellite_content_views:
-      - name: cv_rhel8
-        repositories:
-          - name: Red Hat Enterprise Linux 8 for x86_64 - BaseOS RPMs 8
-            product: 'Red Hat Enterprise Linux for x86_64'
-          - name: Red Hat Enterprise Linux 8 for x86_64 - AppStream RPMs 8
-            product: 'Red Hat Enterprise Linux for x86_64'
-          - name: Red Hat Satellite Client 6 for RHEL 8 x86_64 RPMs
-            product: 'Red Hat Enterprise Linux for x86_64'
-
-      - name: cv_rhel9
-        repositories:
-          - name: Red Hat Enterprise Linux 9 for x86_64 - BaseOS RPMs 9
-            product: 'Red Hat Enterprise Linux for x86_64'
-          - name: Red Hat Enterprise Linux 9 for x86_64 - AppStream RPMs 9
-            product: 'Red Hat Enterprise Linux for x86_64'
-          - name: Red Hat Satellite Client 6 for RHEL 9 x86_64 RPMs
-            product: 'Red Hat Enterprise Linux for x86_64'
-
-      - name: cv_rhel10
-        repositories:
-          - name: Red Hat Enterprise Linux 10 for x86_64 - BaseOS RPMs 10
-            product: 'Red Hat Enterprise Linux for x86_64'
-          - name: Red Hat Enterprise Linux 10 for x86_64 - AppStream RPMs 10
-            product: 'Red Hat Enterprise Linux for x86_64'
-          - name: Red Hat Satellite Client 6 for RHEL 10 x86_64 RPMs
-            product: 'Red Hat Enterprise Linux for x86_64'
-
-###-----composite  views-----------------
-
-      - name: ccv_rhel8
-        auto_publish: true
-        components:
-          - content_view: cv_rhel8
-            latest: true
-      - name: ccv_rhel9
-        auto_publish: true
-        components:
-          - content_view: cv_rhel9
-            latest: true
-      - name: ccv_rhel10
-        auto_publish: true
-        components:
-          - content_view: cv_rhel10
-            latest: true
-  tags:
-     - content_views
-
-######------------Publish composite views---------
-
-- name: Publish content views
-  ansible.builtin.import_role:
-    name: redhat.satellite.content_view_publish
-  vars:
-    satellite_content_views:
-      - cv_rhel8
-      - cv_rhel9
-      - cv_rhel10
-
-- name: "Publish the composite content view and promote that version"
-  redhat.satellite.content_view_version:
-    username: "{{ satellite_username }}"
-    password: "{{ satellite_password }}"
-    organization: "{{ satellite_organization }}"
-    server_url: "{{ satellite_server_url }}"
-    content_view: "{{ item }}"
-      #force_promote: true
-    lifecycle_environments:
-      - Dev
-      - Prod
-  loop:
-    - ccv_rhel8
-    - ccv_rhel9
-    - ccv_rhel10
-  register: promote_result
-  until: promote_result is success
-  retries: 20
-  delay: 30
-  tags:
-    - promote
-
-- name: Create activation keys
-  ansible.builtin.import_role:
-    name: redhat.satellite.activation_keys
-  vars:
-    satellite_activation_keys:
-      - name: "ak-rhel8"
-        lifecycle_environment: "Prod"
-        content_view: "ccv_rhel8"
-        content_overrides:
-          - label: satellite-client-6-for-rhel-8-x86_64-rpms
-            override: enabled
-
-      - name: "ak-rhel9"
-        lifecycle_environment: "Prod"
-        content_view: "ccv_rhel9"
-        content_overrides:
-          - label: satellite-client-6-for-rhel-9-x86_64-rpms
-            override: enabled
-
-      - name: "ak-rhel10"
-        lifecycle_environment: "Prod"
-        content_view: "ccv_rhel10"
-        content_overrides:
-          - label: satellite-client-6-for-rhel-10-x86_64-rpms
-            override: enabled
-  tags:
-    - ak-keys
+    - repo

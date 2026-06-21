@@ -55,3 +55,27 @@
     var: resolves
   tags:
     - firewalld
+
+- name: Ensure SELinux is enabled
+  ansible.posix.selinux:
+    policy: targeted
+    state: enforcing
+
+- name: Check current system locale
+  ansible.builtin.command: localectl status
+  register: locale_status
+  changed_when: false
+  check_mode: no
+
+- name: Show current locale
+  ansible.builtin.debug:
+    msg: "{{ locale_status.stdout }}"
+
+- name: Set system locale to en_US.UTF-8
+  ansible.builtin.command: localectl set-locale LANG=en_US.UTF-8
+  become: yes
+  when: "'LANG=en_US.UTF-8' not in locale_status.stdout"
+
+- name: Confirm locale is set
+  ansible.builtin.debug:
+    msg: "✅ Locale set to en_US.UTF-8"

@@ -2,8 +2,9 @@
 # vars file for satellite-build
 
 min_cpu_cores: 4
-min_ram_gb: 30
+min_ram_gb: 20
 min_disk_gb: 400
+min_swap_gb: 4
 
 #####------------------------------set the hostname----------------------------------------------
 host_name: larrysat.lab.example.com
@@ -32,6 +33,7 @@ rhc_auth:
 ports:
   - 8000/tcp
   - 9090/tcp
+
 services:
   - dns
   - dhcp
@@ -42,17 +44,63 @@ services:
 
 #######----------------Satellite variables-----------------------------------------------------------------------------
 ###This is the username and password you want the satellite server to have
-satellite_username: "{{ lookup('community.hashi_vault.hashi_vault', 'secret=secret/data/larry_inc/satellite:satellite_username auth_method=approle role_id={{ vault_role_id }} secret_id={{ vault_secret_id 
-}} url={{ vault_url }} validate_certs=False') }}"
+satellite_username: "{{ lookup('community.hashi_vault.hashi_vault', 'secret=secret/data/larry_inc/satellite:satellite_username auth_method=approle role_id={{ vault_role_id }} secret_id={{ vault_secret_id }} url={{ vault_url }} validate_certs=False') }}"
 
 satellite_password: "{{ lookup('community.hashi_vault.hashi_vault', 'secret=secret/data/larry_inc/satellite:satellite_password  auth_method=approle role_id={{ vault_role_id }} secret_id={{ vault_secret_id }} url={{ vault_url }} validate_certs=False') }}"
 
   #satellite_org: "Lanre_Inc"
   #satellite_url: "https://{{ ansible_fqdn }}"
 
-satellite_initial_location: Melbourne
-
+satellite_initial_location: Melton
+  #organization: "{{ satellite_organization }}"
 satellite_server_url: "https://{{ ansible_fqdn }}"
-satellite_organization: "Larry_Inc"
+satellite_organization: "Larry_inc"
 satellite_validate_certs: false
-satellite_manifest_path: "~/manifest.zip"         #####specify the full path to the manifest file on your control node
+satellite_manifest_path: "/home/larry/ansible/roles/satellite-build/files/cffc24a3-7229-4ec5-97f2-fde15cd1de20.zip"
+
+satellite_products:
+  - name: Red Hat Enterprise Linux for x86_64
+    repository_sets:
+      - name: Red Hat Enterprise Linux 8 for x86_64 - BaseOS (RPMs)
+        releasever: 8
+      - name: Red Hat Enterprise Linux 8 for x86_64 - AppStream (RPMs)
+        releasever: 8
+      - name: Red Hat Enterprise Linux 9 for x86_64 - BaseOS (RPMs)
+        releasever: 9
+      - name: Red Hat Enterprise Linux 9 for x86_64 - AppStream (RPMs)
+        releasever: 9
+      - name: Red Hat Enterprise Linux 10 for x86_64 - AppStream (RPMs)
+        releasever: 10
+      - name: Red Hat Enterprise Linux 10 for x86_64 - BaseOS (RPMs)
+        releasever: 10                                                            
+      - name: Red Hat Satellite Client 6 for RHEL 8 x86_64 (RPMs)                
+      - name: Red Hat Satellite Client 6 for RHEL 9 x86_64 (RPMs) 
+      - name: Red Hat Satellite Client 6 for RHEL 10 x86_64 (RPMs)
+
+satellite_sync_list: 
+###------ RHEL 8 ------------------------------------------------------------
+  - "Red Hat Enterprise Linux 8 for x86_64 - BaseOS RPMs 8"
+  - "Red Hat Enterprise Linux 8 for x86_64 - AppStream RPMs 8"
+###--------RHEL 9------------------------------------------------------------
+  - "Red Hat Enterprise Linux 9 for x86_64 - BaseOS RPMs 9"
+  - "Red Hat Enterprise Linux 9 for x86_64 - AppStream RPMs 9"
+###--------RHEL 10------------------------------------------------------------
+  - "Red Hat Enterprise Linux 10 for x86_64 - BaseOS RPMs 10"
+  - "Red Hat Enterprise Linux 10 for x86_64 - AppStream RPMs 10"
+###--------Clients------------------------------------------------------------
+  - "Red Hat Satellite Client 6 for RHEL 8 x86_64 (RPMs)"
+  - "Red Hat Satellite Client 6 for RHEL 9 x86_64 (RPMs)"
+  - "Red Hat Satellite Client 6 for RHEL 10 x86_64 (RPMs)"
+
+satellite_content_views:
+  - cv_rhel8
+  - cv_rhel9
+  - cv_rhel10
+
+satellite_lifecycle_environments:
+  - name: "Dev"
+    prior: "Library"
+  - name: "QA"
+    prior: "Dev"
+  - name: "Prod"
+    prior: "QA"
