@@ -30,7 +30,7 @@
          
           - name: pulp_lv
             fs_type: xfs
-            size: "100%FREE"
+            size: "90%"
             mount_point: "/var/lib/pulp"
             state: present
 

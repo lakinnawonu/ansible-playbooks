@@ -58,22 +58,22 @@
   check_mode: no
   tags:
     - swap
-  
+
 - name: Show swap size
   ansible.builtin.debug:
-    msg: "Swap total = {{ swap_mb.stdout | int // 1024 }} GB"
+    msg: "Swap total = {{ (swap_mb.stdout | int / 1024) | round | int }} GB"
   tags:
     - swap
-  
+
 - name: Skip host if swap < {{ min_swap_gb }} GB
   ansible.builtin.meta: end_host
-  when: (swap_mb.stdout | int // 1024) < min_swap_gb
+  when: (swap_mb.stdout | int / 1024) | round | int < min_swap_gb
   tags:
     - swap
 
 - name: mark compliant host (swap)
   ansible.builtin.debug:
-  msg: "✅ Swap check passed: {{ swap_mb.stdout | int // 1024 }} GB"
+    msg: "✅ Swap check passed: {{ (swap_mb.stdout | int / 1024) | round | int }} GB"
   tags:
     - swap
 

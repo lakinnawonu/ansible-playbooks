@@ -1,19 +1,18 @@
 ---
 - name: Import manifest
   ansible.builtin.import_role:
-    name:  redhat.satellite.manifest
+    name: redhat.satellite.manifest
   tags:
     - manifest
   delegate_to: localhost
-  run_once: true
 
-- name: Add repositories 
+- name: Add repositories
   ansible.builtin.import_role:
     name: redhat.satellite.repositories
   tags:
     - repos
 
-- name: Sync the added repos
+- name: Kick off all repo syncs in parallel (fire and forget)
   redhat.satellite.repository_sync:
     username: "{{ satellite_username }}"
     password: "{{ satellite_password }}"
@@ -23,8 +22,22 @@
     product: Red Hat Enterprise Linux for x86_64
     repository: "{{ item }}"
   async: 14400
-  poll: 30
+  poll: 0
   loop: "{{ satellite_sync_list }}"
+  register: sync_jobs
+  tags:
+    - repos
+
+- name: Wait for all repo syncs to finish
+  ansible.builtin.async_status:
+    jid: "{{ item.ansible_job_id }}"
+  loop: "{{ sync_jobs.results }}"
+  loop_control:
+    label: "{{ item.item }}"
+  register: sync_status
+  until: sync_status.finished
+  retries: 480
+  delay: 30
   tags:
     - repos
 
@@ -35,7 +48,7 @@
     satellite_sync_plans:
       - name: Rhel Daily sync
         interval: daily
-        sync_date: "2026-06-21 02:00:00 +1100"
+        sync_date: "{{ '%Y-%m-%d 02:00:00 +1100' | strftime((ansible_facts.date_time.epoch | int) + 86400) }}"
         products:
           - Red Hat Enterprise Linux for x86_64
   tags:
@@ -44,8 +57,12 @@
 - name: Create lifecycle Environments
   ansible.builtin.import_role:
     name: redhat.satellite.lifecycle_environments
+  tags:
+    - lifecycle
+    - promote
+    - ak-keys
 
-- name: Create content views and composite content views 
+- name: Create content views and composite content views
   ansible.builtin.import_role:
     name: redhat.satellite.content_views
   vars:
@@ -99,16 +116,19 @@
 
 ######------------Publish composite views---------
 
-- name: Publish content views
+- name: Publish content views (composites auto-publish via auto_publish:true)
   ansible.builtin.import_role:
     name: redhat.satellite.content_view_publish
   vars:
     satellite_content_views:
       - cv_rhel8
-      - cv_rhel9 
+      - cv_rhel9
       - cv_rhel10
+  tags:
+    - content_views
+    - promote
 
-- name: "Publish the composite content view and promote that version" 
+- name: "Promote the composite content view through lifecycle environments"
   redhat.satellite.content_view_version:
     username: "{{ satellite_username }}"
     password: "{{ satellite_password }}"
@@ -116,7 +136,7 @@
     server_url: "{{ satellite_server_url }}"
     validate_certs: "{{ satellite_validate_certs }}"
     content_view: "{{ item }}"
-      #force_promote: true
+    current_lifecycle_environment: Library
     lifecycle_environments:
       - Dev
       - QA

@@ -1,5 +1,22 @@
 ---
 
+- name: Ensure firewalld and its Python binding are installed
+  ansible.builtin.dnf:
+    name:
+      - firewalld
+      - python3-firewall
+    state: present
+  tags:
+    - firewalld
+
+- name: Ensure firewalld service is running and enabled at boot
+  ansible.builtin.service:
+    name: firewalld
+    state: started
+    enabled: true
+  tags:
+    - firewalld
+
 - name: Open the ports for clients on Satellite Server
   ansible.posix.firewalld:
     port: "{{ item }}"

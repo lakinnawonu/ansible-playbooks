@@ -1,6 +1,11 @@
 ---
 # tasks file for satellite-build
 
+- name: Capture this role's path so imported roles can resolve files/ correctly
+  ansible.builtin.set_fact:
+    satellite_build_role_path: "{{ role_path }}"
+  tags:
+    - always
 
 - name: Pre-checks
   ansible.builtin.import_tasks:
@@ -33,4 +38,8 @@
     file: 07-configure-satellite.yml
   tags:
     - manifest
-    - repo
+    - repos
+    - lifecycle
+    - content_views
+    - promote
+    - ak-keys

@@ -8,12 +8,22 @@
   tags:
     - checks
 
-- name: Ensure blivet Python library is installed
+- name: Ensure blivet Python library and all libblockdev plugins are installed
   ansible.builtin.dnf:
     name:
       - python3-blivet
-      - libblockdev-lvm
       - lvm2
+      - libblockdev-crypto
+      - libblockdev-dm
+      - libblockdev-fs
+      - libblockdev-loop
+      - libblockdev-lvm
+      - libblockdev-mdraid
+      - libblockdev-mpath
+      - libblockdev-nvdimm
+      - libblockdev-nvme
+      - libblockdev-part
+      - libblockdev-swap
     state: present
   tags:
     - checks

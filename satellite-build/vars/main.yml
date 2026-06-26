@@ -56,7 +56,7 @@ satellite_initial_location: Melton
 satellite_server_url: "https://{{ ansible_fqdn }}"
 satellite_organization: "Larry_inc"
 satellite_validate_certs: false
-satellite_manifest_path: "/home/larry/ansible/roles/satellite-build/files/cffc24a3-7229-4ec5-97f2-fde15cd1de20.zip"
+satellite_manifest_path: "{{ satellite_build_role_path }}/files/larry-sat-manifest.zip"
 
 satellite_products:
   - name: Red Hat Enterprise Linux for x86_64
@@ -88,9 +88,9 @@ satellite_sync_list:
   - "Red Hat Enterprise Linux 10 for x86_64 - BaseOS RPMs 10"
   - "Red Hat Enterprise Linux 10 for x86_64 - AppStream RPMs 10"
 ###--------Clients------------------------------------------------------------
-  - "Red Hat Satellite Client 6 for RHEL 8 x86_64 (RPMs)"
-  - "Red Hat Satellite Client 6 for RHEL 9 x86_64 (RPMs)"
-  - "Red Hat Satellite Client 6 for RHEL 10 x86_64 (RPMs)"
+  - "Red Hat Satellite Client 6 for RHEL 8 x86_64 RPMs"
+  - "Red Hat Satellite Client 6 for RHEL 9 x86_64 RPMs"
+  - "Red Hat Satellite Client 6 for RHEL 10 x86_64 RPMs"
 
 satellite_content_views:
   - cv_rhel8
